@@ -1,0 +1,55 @@
+---
+
+- hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    # This playbook deploys Splunk Universal Forwarder
+
+    - name: add splunk group
+      group:
+        name: splunk
+        state: present
+
+    - name: Add the splunk user
+      user:
+        name: splunk
+        comment: splunk user
+        group: splunk
+        state: present
+
+    - name: Create Splunk /tmp Diretory
+      file:
+        path: /tmp/splunk
+        state: directory
+        mode: 0755
+
+    - name: Copy Archives
+      copy:
+        src: /home/ubuntu/ansible-server-Splunk/splunk_software/splunkforwarder-7.1.2-a0c72a66db66-Linux-x86_64.tgz
+        dest: /tmp/splunk
+        owner: splunk
+        group: splunk
+        mode: 0700
+        
+    - name: Uncompress forwarder gzip
+        command: tar -xzvf /tmp/splunk/splunkforwarder-7.1.2-a0c72a66db66-Linux-x86_64.tgz -C /opt
+        become: yes
+
+    - name: Change folder permissions on /opt/splunkforwareder
+      file:
+        path: /opt/splunkforwarder
+        owner: splunk
+        group: splunk
+        mode: 0755
+        recurse: yes
+
+    - name: Start Splunk
+        command: /opt/splunkforwarder/bin/splunk start --answer-yes --no-prompt --accept-license
+        become_user: splunk
+
+
+    - name: Enable Splunk on Reboot
+        command: /opt/splunkforwarder/bin/splunk enable boot-start -user splunk
+        become: yes
+
