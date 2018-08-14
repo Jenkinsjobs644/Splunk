@@ -15,6 +15,11 @@ pipeline {
         }
       }
     }
+    stage('Install Splunk Forwarder') {
+      steps {
+        build 'SplunkForwarderInstall'
+      }
+    }
   }
   environment {
     AWS_ACCESS_KEY_ID = 'AKIAIMYS43N3OQ3ABEAA'
