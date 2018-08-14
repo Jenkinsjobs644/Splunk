@@ -22,8 +22,8 @@ pipeline {
     }
   }
   environment {
-    AWS_ACCESS_KEY_ID = 'AKIAIMYS43N3OQ3ABEAA'
-    AWS_SECRET_ACCESS_KEY = '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'
+    AWS_ACCESS_KEY_ID = ''
+    AWS_SECRET_ACCESS_KEY = ''
     REGION = 'us-west-2'
   }
 }
