@@ -1,11 +1,9 @@
 ---
 
-- hosts: all
+- hosts: "{{ splunkhosts }}"
   become: yes
   become_method: sudo
   tasks:
-    # This playbook deploys Splunk Universal Forwarder
-
     - name: add splunk group
       group:
         name: splunk
@@ -18,38 +16,28 @@
         group: splunk
         state: present
 
-    - name: Create Splunk /tmp Diretory
-      file:
-        path: /tmp/splunk
-        state: directory
-        mode: 0755
-
+    - name: check if /opt/splunkforwarder directory exists
+      stat: path=/opt/splunkforwarder
+      register: splunkpath
     - name: Copy Archives
+      unarchive:
+        src: "{{ splunkfile }}"
+        dest: /opt
+        owner: splunk
+        group: splunk
+        mode: 0750
+      when: not splunkpath.stat.exists
+    - name: Copy passwd file
       copy:
-        src: /home/ubuntu/ansible-server-Splunk/splunk_software/splunkforwarder-7.1.2-a0c72a66db66-Linux-x86_64.tgz
-        dest: /tmp/splunk
+        src: /data/Splunk_Software/passwd
+        dest: /opt/splunkforwarder/etc
         owner: splunk
         group: splunk
         mode: 0700
-        
-    - name: Uncompress forwarder gzip
-        command: tar -xzvf /tmp/splunk/splunkforwarder-7.1.2-a0c72a66db66-Linux-x86_64.tgz -C /opt
-        become: yes
-
-    - name: Change folder permissions on /opt/splunkforwareder
-      file:
-        path: /opt/splunkforwarder
-        owner: splunk
-        group: splunk
-        mode: 0755
-        recurse: yes
-
+      when: not splunkpath.stat.exists
+    - name: Stop Splunk
+      command: /opt/splunkforwarder/bin/splunk stop --answer-yes --no-prompt --accept-license
+      become_user: splunk
     - name: Start Splunk
-        command: /opt/splunkforwarder/bin/splunk start --answer-yes --no-prompt --accept-license
-        become_user: splunk
-
-
-    - name: Enable Splunk on Reboot
-        command: /opt/splunkforwarder/bin/splunk enable boot-start -user splunk
-        become: yes
-
+      command: /opt/splunkforwarder/bin/splunk start --answer-yes --no-prompt --accept-license
+      become_user: splunk
